@@ -5,6 +5,8 @@
 uint32 vga_index;
 #define REG_SCREEN_CTRL 0x3D4
 #define REG_SCREEN_DATA 0x3D5
+uint32 VGA_ADDRESS=0xB8000;
+#define BUFSIZE 4000
 uint8 vga16tty_color_fg = 7;
 uint8 vga16tty_color_bg = 0;
 
@@ -35,6 +37,21 @@ void vga16tty_cursor_set(uint8 x,uint8 y) {
   port_byte_out(REG_SCREEN_DATA, offset);
 }
 
+#define vga16_cursor_on 0
+#define vga16_cursor_off 1
+#define vga16_cursor_slow 2
+#define vga16_cursor_fast 3
+
+void vga16tty_cursor_mode(uint8 offset,uint8 size,uint8 mode) {
+  mode &= 7;
+  offset &= 31;
+  if (size > offset) size = offset;
+  port_byte_out(REG_SCREEN_CTRL, 10);
+  port_byte_out(REG_SCREEN_DATA, (offset-size)|(mode<<5));
+  port_byte_out(REG_SCREEN_CTRL, 11);
+  port_byte_out(REG_SCREEN_DATA, offset);
+}
+
 void vga16tty_init() {
   port_byte_out(REG_SCREEN_CTRL, 14);
   int offset = port_byte_in(REG_SCREEN_DATA) << 8;
@@ -53,7 +70,7 @@ enum vga_putchar_mode_modes {
 
 uint8 vga_putchar_mode = putchar_WRITE;
 uint8 vga_putchar_parameter = 0;
-uint8 vga_putchar_parameters[31];
+uint8 vga_putchar_parameters[32];
 int vga_pos_x2 = 0; // for save/restore
 int vga_pos_y2 = 0; // for save/restore
 
@@ -258,6 +275,198 @@ void vga16tty_putchar(unsigned char c) {
   vga16tty_cursor_set(vga_pos_x,vga_pos_y);
 }
 
+// ---------------- MATH ----------------
+
+uint8 lenH(uint32 val) {
+  uint8 len = 0;
+  while (val) {
+    len++;
+    val /= 16;
+  }
+  if (len==0) return 1;
+  return len;
+};
+
+void strH(uint32 val, char *buf, uint8 len) {
+  while (len) {
+    if ((val%16) > 9) {
+      buf[len-1] = 'A'+(val%16)-10;
+    } else {
+      buf[len-1] = '0'+(val%16);
+    };
+    val /= 16;
+    len--;
+  };
+};
+
+void printH(uint32 val) {
+  uint8 len = lenH(val);
+  char buf[len+1];
+  strH(val,buf,len);
+  buf[len] = NULL;
+  printf(buf);
+};
+
+uint8 lenD(uint32 val) {
+  uint8 len = 0;
+  while (val) {
+    len++;
+    val /= 10;
+  }
+  if (len==0) return 1;
+  return len;
+};
+
+void strD(uint32 val, char *buf, uint8 len) {
+  while (len) {
+    buf[len-1] = '0'+(val%10);
+    val /= 10;
+    len--;
+  };
+};
+
+void printD(uint32 val) {
+  uint8 len = lenD(val);
+  char buf[len+1];
+  strD(val,buf,len);
+  buf[len] = NULL;
+  printf(buf);
+};
+
+uint8 lenO(uint32 val) {
+  uint8 len = 0;
+  while (val) {
+    len++;
+    val /= 8;
+  }
+  if (len==0) return 1;
+  return len;
+};
+
+void strO(uint32 val, char *buf, uint8 len) {
+  while (len) {
+    buf[len-1] = '0'+(val%8);
+    val /= 8;
+    len--;
+  };
+};
+
+void printO(uint32 val) {
+  uint8 len = lenO(val);
+  char buf[len+1];
+  strO(val,buf,len);
+  buf[len] = NULL;
+  printf(buf);
+};
+
+uint8 lenB(uint32 val) {
+  uint8 len = 0;
+  while (val) {
+    len++;
+    val /= 2;
+  }
+  if (len==0) return 1;
+  return len;
+};
+
+void strB(uint32 val, char *buf, uint8 len) {
+  while (len) {
+    buf[len-1] = '0'+(val%2);
+    val /= 2;
+    len--;
+  };
+};
+
+void printB(uint32 val) {
+  uint8 len = lenB(val);
+  char buf[len+1];
+  strB(val,buf,len);
+  buf[len] = NULL;
+  printf(buf);
+};
+
+// ---------------- STRING ----------------
+
+uint32 valH(char* str) {
+  uint8 i = 0;
+  char a = ' ';
+  uint32 val = 0;
+  while (str[i]) {
+    a = str[i];
+    switch (a) {
+      case '0' ... '9': {
+        val *= 16;
+        val += a - '0';
+        } break;
+      case 'a' ... 'f': {
+        val *= 16;
+        val += a - 'a' + 10;
+        } break;
+      case 'A' ... 'F': {
+        val *= 16;
+        val += a - 'A' + 10;
+        } break;
+      default: return val;
+    };
+    i++;
+  };
+  return val;
+};
+
+uint32 valD(char* str) {
+  uint8 i = 0;
+  char a = ' ';
+  uint32 val = 0;
+  while (str[i]) {
+    a = str[i];
+    switch (a) {
+      case '0' ... '9': {
+        val *= 10;
+        val += a - '0';
+        } break;
+      default: return val;
+    };
+    i++;
+  };
+  return val;
+};
+
+uint32 valO(char* str) {
+  uint8 i = 0;
+  char a = ' ';
+  uint32 val = 0;
+  while (str[i]) {
+    a = str[i];
+    switch (a) {
+      case '0' ... '7': {
+        val *= 8;
+        val += a - '0';
+        } break;
+      default: return val;
+    };
+    i++;
+  };
+  return val;
+};
+
+uint32 valB(char* str) {
+  uint8 i = 0;
+  char a = ' ';
+  uint32 val = 0;
+  while (str[i]) {
+    a = str[i];
+    switch (a) {
+      case '0' ... '1': {
+        val *= 2;
+        val += a - '0';
+        } break;
+      default: return val;
+    };
+    i++;
+  };
+  return val;
+};
+
 // ---------------- PRINT ----------------
 
 enum printf_mode_modes {
@@ -303,10 +512,14 @@ void printf(char* str) {
 // ---------------- _MAIN ----------------
 
 void test() {
-  while(1){
-    printf("\e[1J\e[34mhallo \e[94mdu \e[36mmensch\eB\eB");
-    for (int i=0;i < 100000000;i++){}
-  };
+  printf("\n\nHex: ");
+  printH(valH("ABCDEF"));
+  printf("\nDec: ");
+  printD(valD("1234567890"));
+  printf("\nOct: ");
+  printO(valO("1234567"));
+  printf("\nBin: ");
+  printB(valB("111100001111"));
 }
 
 void welcome() {
@@ -369,6 +582,7 @@ void welcome() {
 
 void main() {
   vga16tty_init();
+  vga16tty_cursor_mode(16,2,vga16_cursor_on);
   welcome();
   test();
 

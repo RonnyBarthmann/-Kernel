@@ -1,22 +1,30 @@
-CC      = /usr/bin/gcc
-LD	= /usr/bin/ld
-CFLAGS  = -m32 -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-LDFLAGS = -m elf_i386 -T linker.ld -nostdlib
+SRCS = $(shell find -name '*.[cS]')
+OBJS = $(addsuffix .o,$(basename $(SRCS)))
 
-OBJ = boot.o kernel.o low_level.o printf.o vga16tty.o
+CC = gcc
+LD = ld
 
-kernel.bin: $(OBJ)
-	$(LD) $(LDFLAGS) -o kernel.bin $(OBJ)
+ASFLAGS = -m32
+CFLAGS = -m32 -Wall -g -fno-stack-protector -nostdinc
+LDFLAGS = -melf_i386 -Tlinker.ld
+
+kernel.bin: $(OBJS)
+	$(LD) $(LDFLAGS) -o $@ $^
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -c -o $@ $^
 
-.PHONY: clean
+%.o: %.S
+	$(CC) $(ASFLAGS) -c -o $@ $^
+
 clean:
-	rm -rf kernel.bin $(OBJ)
+	rm -f *.o *.bin
 
-.PHONY: run
 run:
 	qemu-system-i386 -kernel kernel.bin
 
 test: clean kernel.bin run
+
+.PHONY: clean
+.PHONY: run
+

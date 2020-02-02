@@ -3,8 +3,6 @@
 
 
 
-#define VGA_ADDRESS 0xB8000
-#define BUFSIZE 4000
 
 enum vga_color {
     BLACK,
