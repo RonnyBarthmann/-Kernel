@@ -1,0 +1,34 @@
+the µKernel kernel supports the following ESC-Seq:
+
+Esc[<Line>;<Column>H	Set Cursor pos
+Esc[<Line>;<Column>f	Set Cursor pos
+Esc[<Value>A		Cursor Up by <Value> steps
+Esc[<Value>B		Cursor Down by <Value> steps
+Esc[<Value>C		Cursor Right by <Value> steps
+Esc[<Value>D		Cursor Left by <Value> steps
+Esc[s			Save Cursor pos
+Esc[u			Restore Cursor pos
+Esc[H			Move Cursor to 0,0
+Esc[K			Clear line from cursor right
+Esc[0K			Clear line from cursor right
+Esc[1K			Clear line from cursor left
+Esc[2K			Clear entire line
+Esc[J			Clear screen from cursor down
+Esc[0J			Clear screen from cursor down
+Esc[1J			Clear screen from cursor up
+Esc[2J			Clear entire screen
+EscA			Cursor Up
+EscB			Cursor Down
+EscC			Cursor Right
+EscD			Cursor Left
+EscK			Erase to end of current line
+EscJ			Erase to end of screen
+Esc7			Save Cursor pos and mode
+Esc8			Restore Cursor pos and mode
+Esc[<Value>;..;<Value>m	Parse all* Params as:	30..37		Foreground 0..7		*) up to 32
+						40..47		Background 0..7
+						90..97		Foreground 0..7 light
+						100..107	Background 0..7 light/blink
+						38		Foreground 7
+						48		Background 0
+
