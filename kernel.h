@@ -6,6 +6,7 @@ typedef unsigned short uint16;
 typedef unsigned int uint32;
 
 uint16* vga_buffer;
+void kprintf(char* str);
 
 #define NULL 0
 

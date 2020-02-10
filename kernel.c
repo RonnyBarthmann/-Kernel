@@ -6,7 +6,7 @@ uint32 vga_index;
 #define REG_SCREEN_CTRL 0x3D4
 #define REG_SCREEN_DATA 0x3D5
 uint32 VGA_ADDRESS=0xB8000;
-#define BUFSIZE 4000
+#define BUFSIZE 4000;
 uint8 vga16tty_color_fg = 7;
 uint8 vga16tty_color_bg = 0;
 
@@ -75,6 +75,7 @@ int vga_pos_x2 = 0; // for save/restore
 int vga_pos_y2 = 0; // for save/restore
 
 void vga16tty_putchar(unsigned char c) {
+  vga_buffer = (uint16*)VGA_ADDRESS;
   switch (vga_putchar_mode) {
     case putchar_WRITE: {
       switch(c) {
@@ -106,7 +107,6 @@ void vga16tty_putchar(unsigned char c) {
         case 255: break;               // DEL
         default: {
           uint16 vga_index = vga_pos_x + vga_pos_y * vga_width;
-          vga_buffer = (uint16*)VGA_ADDRESS;
           vga_buffer[vga_index] = ( c & 255 ) | ( vga16tty_color_fg & 15 ) << 8 | ( vga16tty_color_bg & 15 ) << 12;
           vga_pos_x++;
         } break;
@@ -131,15 +131,13 @@ void vga16tty_putchar(unsigned char c) {
         case 'K': {
               uint16 start = vga_pos_x + vga_pos_y * vga_width;
               uint16 stop = 79 + vga_pos_y * vga_width;
-              vga_buffer = (uint16*)VGA_ADDRESS;
-              for (int i=start; i<=stop; i++) vga_buffer[i] = 0;
+              for (int i=start; i<=stop; i++) vga_buffer[i] = ( vga16tty_color_fg & 15 ) << 8 | ( vga16tty_color_bg & 15 ) << 12;
               vga_putchar_mode = putchar_WRITE;
             } break;
         case 'J': {
               uint16 start = vga_pos_x + vga_pos_y * vga_width;
               uint16 stop = vga_height * vga_width - 1;
-              vga_buffer = (uint16*)VGA_ADDRESS;
-              for (int i=start; i<=stop; i++) vga_buffer[i] = 0;
+              for (int i=start; i<=stop; i++) vga_buffer[i] = ( vga16tty_color_fg & 15 ) << 8 | ( vga16tty_color_bg & 15 ) << 12;
               vga_putchar_mode = putchar_WRITE;
             } break;
         case '[': vga_putchar_mode = putchar_ESCAPE_PARAM; break;
@@ -183,22 +181,19 @@ void vga16tty_putchar(unsigned char c) {
             case 0: {
               uint16 start = vga_pos_x + vga_pos_y * vga_width;
               uint16 stop = 79 + vga_pos_y * vga_width;
-              vga_buffer = (uint16*)VGA_ADDRESS;
-              for (int i=start; i<=stop; i++) vga_buffer[i] = 0;
+              for (int i=start; i<=stop; i++) vga_buffer[i] = ( vga16tty_color_fg & 15 ) << 8 | ( vga16tty_color_bg & 15 ) << 12;
               vga_putchar_mode = putchar_WRITE;
             } break;
             case 1: {
               uint16 start = vga_pos_y * vga_width;
               uint16 stop = vga_pos_x + vga_pos_y * vga_width;
-              vga_buffer = (uint16*)VGA_ADDRESS;
-              for (int i=start; i<=stop; i++) vga_buffer[i] = 0;
+              for (int i=start; i<=stop; i++) vga_buffer[i] = ( vga16tty_color_fg & 15 ) << 8 | ( vga16tty_color_bg & 15 ) << 12;
               vga_putchar_mode = putchar_WRITE;
             } break;
             case 2: {
               uint16 start = vga_pos_y * vga_width;
               uint16 stop = 79 + vga_pos_y * vga_width;
-              vga_buffer = (uint16*)VGA_ADDRESS;
-              for (int i=start; i<=stop; i++) vga_buffer[i] = 0;
+              for (int i=start; i<=stop; i++) vga_buffer[i] = ( vga16tty_color_fg & 15 ) << 8 | ( vga16tty_color_bg & 15 ) << 12;
               vga_putchar_mode = putchar_WRITE;
             } break;
             default: break;
@@ -209,22 +204,19 @@ void vga16tty_putchar(unsigned char c) {
             case 0: {
               uint16 start = vga_pos_x + vga_pos_y * vga_width;
               uint16 stop = vga_height * vga_width - 1;
-              vga_buffer = (uint16*)VGA_ADDRESS;
-              for (int i=start; i<=stop; i++) vga_buffer[i] = 0;
+              for (int i=start; i<=stop; i++) vga_buffer[i] = ( vga16tty_color_fg & 15 ) << 8 | ( vga16tty_color_bg & 15 ) << 12;
               vga_putchar_mode = putchar_WRITE;
             } break;
             case 1: {
               uint16 start = 0;
               uint16 stop = vga_pos_x + vga_pos_y * vga_width;
-              vga_buffer = (uint16*)VGA_ADDRESS;
-              for (int i=start; i<=stop; i++) vga_buffer[i] = 0;
+              for (int i=start; i<=stop; i++) vga_buffer[i] = ( vga16tty_color_fg & 15 ) << 8 | ( vga16tty_color_bg & 15 ) << 12;
               vga_putchar_mode = putchar_WRITE;
             } break;
             case 2: {
               uint16 start = 0;
               uint16 stop = vga_height * vga_width - 1;
-              vga_buffer = (uint16*)VGA_ADDRESS;
-              for (int i=start; i<=stop; i++) vga_buffer[i] = 0;
+              for (int i=start; i<=stop; i++) vga_buffer[i] = ( vga16tty_color_fg & 15 ) << 8 | ( vga16tty_color_bg & 15 ) << 12;
               vga_putchar_mode = putchar_WRITE;
             } break;
             default: break;
@@ -234,12 +226,12 @@ void vga16tty_putchar(unsigned char c) {
           for (int i=0; i<=vga_putchar_parameter; i++) {
             switch (vga_putchar_parameters[i]) {
               case 0: vga16tty_color_fg = 7; vga16tty_color_bg = 0 ; break;
-              case 30 ... 37: vga16tty_color_fg = vga_putchar_parameters[0] - 30 ; break;
+              case 30 ... 37: vga16tty_color_fg = vga_putchar_parameters[i] - 30 ; break;
               case 38: vga16tty_color_fg = 7 ; break;
-              case 40 ... 47: vga16tty_color_bg = vga_putchar_parameters[0] - 40 ; break;
+              case 40 ... 47: vga16tty_color_bg = vga_putchar_parameters[i] - 40 ; break;
               case 48: vga16tty_color_bg = 0 ; break;
-              case 90 ... 97: vga16tty_color_fg = vga_putchar_parameters[0] - 82 ; break;
-              case 100 ... 107: vga16tty_color_bg = vga_putchar_parameters[0] - 92 ; break;
+              case 90 ... 97: vga16tty_color_fg = vga_putchar_parameters[i] - 82 ; break;
+              case 100 ... 107: vga16tty_color_bg = vga_putchar_parameters[i] - 92 ; break;
               default: break;
             }
           };
@@ -265,7 +257,7 @@ void vga16tty_putchar(unsigned char c) {
       vga_buffer[idest] = vga_buffer[isource];
     }
     for (int idest=vga_width * (vga_height-1);idest < vga_width * vga_height;idest++){
-      vga_buffer[idest] = NULL;
+      vga_buffer[idest] = ( vga16tty_color_fg & 15 ) << 8 | ( vga16tty_color_bg & 15 ) << 12;
     }
     vga_pos_y--;
   }
@@ -299,12 +291,28 @@ void strH(uint32 val, char *buf, uint8 len) {
   };
 };
 
+void printHfs(uint32 val, uint8 len, char space) {
+  char buf[len+1];
+  for (uint8 i=0; i<len; i++) buf[i] = space;
+  uint8 size = lenH(val);
+  strH(val,buf+(len-size),size);
+  buf[len] = NULL;
+  kprintf(buf);
+};
+
+void printHf(uint32 val, uint8 len) {
+  char buf[len+1];
+  strH(val,buf,len);
+  buf[len] = NULL;
+  kprintf(buf);
+};
+
 void printH(uint32 val) {
   uint8 len = lenH(val);
   char buf[len+1];
   strH(val,buf,len);
   buf[len] = NULL;
-  printf(buf);
+  kprintf(buf);
 };
 
 uint8 lenD(uint32 val) {
@@ -325,12 +333,28 @@ void strD(uint32 val, char *buf, uint8 len) {
   };
 };
 
+void printDfs(uint32 val, uint8 len, char space) {
+  char buf[len+1];
+  for (uint8 i=0; i<len; i++) buf[i] = space;
+  uint8 size = lenD(val);
+  strD(val,buf+(len-size),size);
+  buf[len] = NULL;
+  kprintf(buf);
+};
+
+void printDf(uint32 val, uint8 len) {
+  char buf[len+1];
+  strD(val,buf,len);
+  buf[len] = NULL;
+  kprintf(buf);
+};
+
 void printD(uint32 val) {
   uint8 len = lenD(val);
   char buf[len+1];
   strD(val,buf,len);
   buf[len] = NULL;
-  printf(buf);
+  kprintf(buf);
 };
 
 uint8 lenO(uint32 val) {
@@ -351,12 +375,28 @@ void strO(uint32 val, char *buf, uint8 len) {
   };
 };
 
+void printOfs(uint32 val, uint8 len, char space) {
+  char buf[len+1];
+  for (uint8 i=0; i<len; i++) buf[i] = space;
+  uint8 size = lenO(val);
+  strO(val,buf+(len-size),size);
+  buf[len] = NULL;
+  kprintf(buf);
+};
+
+void printOf(uint32 val, uint8 len) {
+  char buf[len+1];
+  strO(val,buf,len);
+  buf[len] = NULL;
+  kprintf(buf);
+};
+
 void printO(uint32 val) {
   uint8 len = lenO(val);
   char buf[len+1];
   strO(val,buf,len);
   buf[len] = NULL;
-  printf(buf);
+  kprintf(buf);
 };
 
 uint8 lenB(uint32 val) {
@@ -377,12 +417,28 @@ void strB(uint32 val, char *buf, uint8 len) {
   };
 };
 
+void printBfs(uint32 val, uint8 len, char space) {
+  char buf[len+1];
+  for (uint8 i=0; i<len; i++) buf[i] = space;
+  uint8 size = lenB(val);
+  strB(val,buf+(len-size),size);
+  buf[len] = NULL;
+  kprintf(buf);
+};
+
+void printBf(uint32 val, uint8 len) {
+  char buf[len+1];
+  strB(val,buf,len);
+  buf[len] = NULL;
+  kprintf(buf);
+};
+
 void printB(uint32 val) {
   uint8 len = lenB(val);
   char buf[len+1];
   strB(val,buf,len);
   buf[len] = NULL;
-  printf(buf);
+  kprintf(buf);
 };
 
 // ---------------- STRING ----------------
@@ -469,41 +525,41 @@ uint32 valB(char* str) {
 
 // ---------------- PRINT ----------------
 
-enum printf_mode_modes {
-  printf_WRITE,
-  printf_SEQ,
+enum kprintf_mode_modes {
+  kprintf_WRITE,
+  kprintf_SEQ,
 };
 
-uint8 printf_mode = printf_WRITE;
+uint8 kprintf_mode = kprintf_WRITE;
 
-void printf(char* str) {
+void kprintf(char* str) {
   int i=0;
   while (str[i]) {
     char c = str[i];
-    switch (printf_mode) {
-      case printf_WRITE: {
+    switch (kprintf_mode) {
+      case kprintf_WRITE: {
         switch (c) {
-          case 92: printf_mode = printf_SEQ; break;
+          case 92: kprintf_mode = kprintf_SEQ; break;
           default: vga16tty_putchar(c); break;
         }
       } break;
-      case printf_SEQ: {
+      case kprintf_SEQ: {
         switch (c) {
-          case 'a': vga16tty_putchar(0x07); printf_mode = printf_WRITE; break;
-          case 'b': vga16tty_putchar(0x08); printf_mode = printf_WRITE; break;
-          case 'e': vga16tty_putchar(0x1b); printf_mode = printf_WRITE; break;
-          case 'f': vga16tty_putchar(0x0c); printf_mode = printf_WRITE; break;
-          case 'n': vga16tty_putchar(0x0a); printf_mode = printf_WRITE; break;
-          case 'r': vga16tty_putchar(0x0d); printf_mode = printf_WRITE; break;
-          case 't': vga16tty_putchar(0x09); printf_mode = printf_WRITE; break;
-          case 'v': vga16tty_putchar(0x0b); printf_mode = printf_WRITE; break;
-          case 92:  vga16tty_putchar(0x5c); printf_mode = printf_WRITE; break;
-          case 39:  vga16tty_putchar(0x27); printf_mode = printf_WRITE; break;
-          case 34:  vga16tty_putchar(0x22); printf_mode = printf_WRITE; break;
-          default:  printf_mode = printf_WRITE; vga16tty_putchar(c); break;
+          case 'a': vga16tty_putchar(0x07); kprintf_mode = kprintf_WRITE; break;
+          case 'b': vga16tty_putchar(0x08); kprintf_mode = kprintf_WRITE; break;
+          case 'e': vga16tty_putchar(0x1b); kprintf_mode = kprintf_WRITE; break;
+          case 'f': vga16tty_putchar(0x0c); kprintf_mode = kprintf_WRITE; break;
+          case 'n': vga16tty_putchar(0x0a); kprintf_mode = kprintf_WRITE; break;
+          case 'r': vga16tty_putchar(0x0d); kprintf_mode = kprintf_WRITE; break;
+          case 't': vga16tty_putchar(0x09); kprintf_mode = kprintf_WRITE; break;
+          case 'v': vga16tty_putchar(0x0b); kprintf_mode = kprintf_WRITE; break;
+          case 92:  vga16tty_putchar(0x5c); kprintf_mode = kprintf_WRITE; break;
+          case 39:  vga16tty_putchar(0x27); kprintf_mode = kprintf_WRITE; break;
+          case 34:  vga16tty_putchar(0x22); kprintf_mode = kprintf_WRITE; break;
+          default:  kprintf_mode = kprintf_WRITE; vga16tty_putchar(c); break;
         }
       } break;
-      default: printf_mode = printf_WRITE; break;
+      default: kprintf_mode = kprintf_WRITE; break;
     }
     i++;
   }
@@ -511,80 +567,134 @@ void printf(char* str) {
 
 // ---------------- _MAIN ----------------
 
-void test() {
-  printf("\n\nHex: ");
-  printH(valH("ABCDEF"));
-  printf("\nDec: ");
-  printD(valD("1234567890"));
-  printf("\nOct: ");
-  printO(valO("1234567"));
-  printf("\nBin: ");
-  printB(valB("111100001111"));
+void test1() {
+  uint32 i=0;
+  kprintf("\n");
+  while (1) {
+    kprintf("Hex:");
+    printHfs(i,8,'_');
+    kprintf(" Dec:");
+    printDfs(i,10,'_');
+    kprintf(" Oct:");
+    printOfs(i,11,'_');
+    kprintf(" Bin:");
+    printBfs(i,32,'_');
+    i++;
+  };
 }
 
+void test2() {
+  for (uint8 y=0;y<16;y++) {
+    kprintf("\n\e[0m\t");
+    uint8 bg = y; if (bg > 7) bg += 52; bg += 40;
+    kprintf("\e[");
+    printD(bg);
+    kprintf("m");
+    for (uint8 x=0;x<16;x++) {
+      uint8 fg = x; if (fg > 7) fg += 52; fg += 30;
+      kprintf("\e[");
+      printD(fg);
+      kprintf("m ");
+      printH(y);
+      printH(x);
+      kprintf(" ");
+    };
+  };
+};
+
+void test3() {
+  while (1) {
+    for (uint8 y=0;y<16;y++) {
+      uint8 bg = y; if (bg > 7) bg += 52; bg += 40;
+      kprintf("\e[");
+      printD(bg);
+      kprintf("m");
+      for (uint8 x=0;x<16;x++) {
+        uint8 fg = x; if (fg > 7) fg += 52; fg += 30;
+        kprintf("\e[");
+        printD(fg);
+        kprintf("m\e[H");
+        for (uint32 i=0; i<1999; i++) vga16tty_putchar('M');
+      };
+    };
+  };
+};
+
+void test4() {
+  while (1) {
+    for (uint8 y=0;y<16;y++) {
+      uint8 bg = y; if (bg > 7) bg += 52; bg += 40;
+      kprintf("\e[");
+      printD(bg);
+      kprintf("m\e[H\e[2J");
+    };
+  };
+};
+
 void welcome() {
-  printf("\n");
-  printf("\n");
-  printf("Welcome to \e[97mu\e[91mK\e[92me\e[93mr\e[94mn\e[95me\e[96ml\e[0m\n");
-  printf("\n");
-  printf("loading       : \e7");
-  printf("\ndecompressing : ");
-  printf("\nlinking       : ");
-  printf("\nexecute       : \e8");
+  kprintf("\n");
+  kprintf("\n");
+  kprintf("Welcome to \e[97mu\e[91mK\e[92me\e[93mr\e[94mn\e[95me\e[96ml\e[0m\n");
+  kprintf("\n");
+  kprintf("loading       : \e7");
+  kprintf("\ndecompressing : ");
+  kprintf("\nlinking       : ");
+  kprintf("\nexecute       : \e8");
 
   // loading
   for (int i=0;i < 60;i++) {
     for (int i2=0;i2 < 100;i2++) {
-      printf(" \b");
+      kprintf(" \b");
     };
-  printf(".");
+  kprintf(".");
   };
   for (int i2=0;i2 < 10000;i2++) {
-    printf(" \b");
+    kprintf(" \b");
   };
 
   // decompressing
-  printf("\e8\eB");
+  kprintf("\e8\eB");
   for (int i=0;i < 60;i++) {
     for (int i2=0;i2 < 1000;i2++) {
-      printf(" \b");
+      kprintf(" \b");
     };
-  printf(".");
+  kprintf(".");
   };
   for (int i2=0;i2 < 30000;i2++) {
-    printf(" \b");
+    kprintf(" \b");
   };
 
   // linking
-  printf("\e8\eB\eB");
+  kprintf("\e8\eB\eB");
   for (int i=0;i < 60;i++) {
     for (int i2=0;i2 < 100;i2++) {
-      printf(" \b");
+      kprintf(" \b");
     };
-  printf(".");
+  kprintf(".");
   };
   for (int i2=0;i2 < 10000;i2++) {
-    printf(" \b");
+    kprintf(" \b");
   };
 
   // execute
-  printf("\e8\eB\eB\eB");
+  kprintf("\e8\eB\eB\eB");
   for (int i=0;i < 60;i++) {
     for (int i2=0;i2 < 10;i2++) {
-      printf(" \b");
+      kprintf(" \b");
     };
-  printf(".");
+  kprintf(".");
   };
   for (int i2=0;i2 < 50000;i2++) {
-    printf(" \b");
+    kprintf(" \b");
   };
 };
 
-void main() {
+int main() {
   vga16tty_init();
   vga16tty_cursor_mode(16,2,vga16_cursor_on);
+  test2();
   welcome();
-  test();
+  test1();
 
   while(1){};
 }
